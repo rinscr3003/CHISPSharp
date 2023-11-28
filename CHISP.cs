@@ -22,8 +22,8 @@ namespace CHISP
         CH32V20X = 9,
         CH32V00X = 0x0b,
         CH59X = 0x0c,
-        CH32X035 = 0x0d, // not supported
-        CH643 = 0x0e, // not supported
+        CH32X035 = 0x0d,
+        CH643 = 0x0e,
     }
 
     /// <summary>
