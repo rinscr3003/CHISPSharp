@@ -149,4 +149,29 @@ namespace CHISP
         CH591 = 0x91,
         CH592 = 0x92,
     }
+
+    /// <summary>
+    /// CH32X035系列的芯片型号
+    /// </summary>
+    public enum CH32X035_ChipType
+    {
+        CH32X033F8P6 = 0x5A,
+        CH32X035R8T6 = 0x50,
+        CH32X035C8T6 = 0x51,
+        CH32X035F8U6 = 0x5E,
+        CH32X035G8U6 = 0x56,
+        CH32X035G8R6 = 0x5B,
+        CH32X035F7P6 = 0x57,
+    }
+
+    /// <summary>
+    /// CH643系列的芯片型号
+    /// </summary>
+    public enum CH643_ChipType
+    {
+        CH643W = 0x30,
+        CH643Q = 0x31,
+        CH643L = 0x33,
+        CH643U = 0x34,
+    }
 }
