@@ -5,6 +5,7 @@ using System.Text;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
+using static CHISP.Wrapper.CHISPWrapper;
 
 namespace CHISP
 {
@@ -46,9 +47,9 @@ namespace CHISP
             };
             public static void InitISPDeviceInfoStruct(ref CHISPDeviceInfo deviceInfo)
             {
-                deviceInfo.IspVer= new Byte[4];
-                deviceInfo.IspMcuUID= new Byte[8];
-                deviceInfo.MacAddr= new Byte[6];
+                deviceInfo.IspVer = new Byte[4];
+                deviceInfo.IspMcuUID = new Byte[8];
+                deviceInfo.MacAddr = new Byte[6];
                 deviceInfo.PortName = "";
             }
 
@@ -140,7 +141,7 @@ namespace CHISP
                 //下载接口
                 option.IspInterface = 0;
                 //下载完成后是否复位直接运行目标程序
-                option.IsMcuResetAfterIsp = 1;
+                option.IsMcuResetAfterIsp = 0;
                 //使能上电复位期间的额外延时复位
                 option.IsEnableLongRest = 1;
                 //指定手工复位输入引脚
@@ -169,6 +170,7 @@ namespace CHISP
                 option.IsSetDevIP = 0;
                 //门限电压
                 option.LV_RST_VOL = 0;
+                option.IsEraseAllCFlash = 1;
                 option.Baud[0] = 0x00;
                 option.Baud[1] = 0xC2;
                 option.Baud[2] = 0x01;
@@ -213,7 +215,7 @@ namespace CHISP
             public static extern Int32 WriteDataFlash(UInt32 iIndex,            //设备序号
             UInt32 StartAddr,         //起始地址
                                          ref UInt32 oWriteLen,        //写入长度
-                                         in Byte[] DataBuf,           //数据缓冲区
+                                         [In] Byte[] DataBuf,           //数据缓冲区
                                          Int32 bIsErase);
 
             //读EEPROM数据
@@ -221,15 +223,15 @@ namespace CHISP
             public static extern Int32 ReadDataFlash(UInt32 iIndex,            //设备序号
             UInt32 StartAddr,         //起始地址
                                         ref UInt32 oReadLen,        //写入长度
-                                        out Byte[] DataBuf);           //数据缓冲区)
+                                        [Out] Byte[] DataBuf);           //数据缓冲区)
 
             [DllImport("WCHISPAPI.dll", EntryPoint = "WCH55xIsp_ReadConfig", CallingConvention = CallingConvention.Winapi)]
             public static extern Int32 ReadConfig(UInt32 DevI,
-                                     out Byte[] IapCfgVal, //4字节
-                                     out Byte[] IspCfgVal, //4字节
-                                     out Byte[] CFlashCfgVal, //4字节
-                                     out UInt32 BootVer,
-                                     out Byte[] UUID);
+                                     [Out] Byte[] IapCfgVal, //4字节
+                                     [Out] Byte[] IspCfgVal, //4字节
+                                     [Out] Byte[] CFlashCfgVal, //4字节
+                                     [Out] UInt32 BootVer,
+                                     [Out] Byte[] UUID);
             //取消操作
             [DllImport("WCHISPAPI.dll", EntryPoint = "WCH55x_StopOp")]
             public static extern void StopOpr();
@@ -250,37 +252,45 @@ namespace CHISP
             [DllImport("WCHISPAPI.dll", EntryPoint = "WCH55x_EnumDevices", CallingConvention = CallingConvention.Winapi)]
             public static extern UInt32 EnumDev([Out] CHISPDeviceInfo[] IspDevInfor, Byte MaxDevCnt, out Byte BtChipSeries, out Byte BtChipType, out Int32 IsPreBTV230);
 
-            //固件与目标文件以及当前配置进行校验，文件方式,复制WCH55x_FlashVerify
+            /// <summary>
+            /// 对片内固件与目标文件以及当前配置进行校验
+            /// </summary>
+            /// <param name="iIndex">设备序号</param>
+            /// <param name="UserFileDataBuf">用户下载文件数据</param>
+            /// <param name="UserFileDataLen">用户下载文件数据长度</param>
+            /// <param name="UserFileDateType">用户下载文件格式 0:HEX格式,1:BIN格式</param>
+            /// <param name="IAPFileDataBuf">IAP下载文件数据</param>
+            /// <param name="IAPFileDataLen">IAP下载文件数据长度</param>
+            /// <param name="IAPFileDateType">IAP文件格式 0:HEX格式,1:BIN格式</param>
+            /// <returns>成功返回非0，失败返回0</returns>
             [DllImport("WCHISPAPI.dll", EntryPoint = "WCH55x_FlashVerifyB", CallingConvention = CallingConvention.Winapi)]
-            public static extern Int32 FlashVerify(UInt32 iIndex,        //设备序号
-                                                in Byte[] UserFileDataBuf,  //用户下载文件数据
-                                                UInt32 UserFileDataLen,  //用户下载文件数据长度
-                                                Byte UserFileDateType, //用户下载文件格式 0:HEX格式,1:BIN格式
-                                                in Byte[] IAPFileDataBuf,   //IAP下载文件数据
-                                                UInt32 IAPFileDataLen,   //IAP下载文件数据长度
-                                                Byte IAPFileDateType);  //IAP文件格式 0:HEX格式,1:BIN格式
+            public static extern Int32 FlashVerify(UInt32 iIndex, [In] Byte[] UserFileDataBuf, UInt32 UserFileDataLen, Byte UserFileDateType, [In] Byte[] IAPFileDataBuf, UInt32 IAPFileDataLen, Byte IAPFileDateType);
 
-            //将目标文件数据写入到mcu flash内，文件方式,复制WCH55x_FlashProgram函数
+            /// <summary>
+            /// 烧写固件和配置选项
+            /// </summary>
+            /// <param name="iIndex">设备序号</param>
+            /// <param name="UserFileDataBuf">用户下载文件数据</param>
+            /// <param name="UserFileDataLen">用户下载文件数据长度</param>
+            /// <param name="UserFileDateType">用户下载文件格式 0:HEX格式,1:BIN格式</param>
+            /// <param name="IAPFileDataBuf">IAP下载文件数据</param>
+            /// <param name="IAPFileDataLen">IAP下载文件数据长度</param>
+            /// <param name="IAPFileDateType">IAP文件格式 0:HEX格式,1:BIN格式</param>
+            /// <returns>成功返回非0，失败返回0</returns>
             [DllImport("WCHISPAPI.dll", EntryPoint = "WCH55x_FlashProgramB", CallingConvention = CallingConvention.Winapi)]
-            public static extern Int32 FlashProgram(UInt32 iIndex,        //设备序号
-                                               in Byte[] UserFileDataBuf,  //用户下载文件数据
-                                                UInt32 UserFileDataLen,  //用户下载文件数据长度
-                                                Byte UserFileDateType, //用户下载文件格式 0:HEX格式,1:BIN格式
-                                                in Byte[] IAPFileDataBuf,   //IAP下载文件数据
-                                                UInt32 IAPFileDataLen,   //IAP下载文件数据长度
-                                                Byte IAPFileDateType);  //IAP文件格式 0:HEX格式,1:BIN格式
+            public static extern Int32 FlashProgram(UInt32 iIndex, [In] Byte[] UserFileDataBuf, UInt32 UserFileDataLen, Byte UserFileDateType, [In] Byte[] IAPFileDataBuf, UInt32 IAPFileDataLen, Byte IAPFileDateType);
 
             //OTP读函数
             [DllImport("WCHISPAPI.dll", EntryPoint = "WCH55x_ReadOTP", CallingConvention = CallingConvention.Winapi)]
             public static extern Int32 ReadOTP(UInt32 iIndex,        //设备序号
                                           Byte OffSet,        //OTP偏移值
-                                          out Byte[] DataBuf);  //OTP数据
+                                          [Out] Byte[] DataBuf);  //OTP数据
 
             //OTP写函数
             [DllImport("WCHISPAPI.dll", EntryPoint = "WCH55x_WriteOTP", CallingConvention = CallingConvention.Winapi)]
             public static extern Int32 WriteOTP(UInt32 iIndex,        //设备序号
                                           Byte OffSet,        //OTP偏移值
-                                          in Byte[] DataBuf);  //OTP数据
+                                          [In] Byte[] DataBuf);  //OTP数据
 
             //手动发送结束包
             [DllImport("WCHISPAPI.dll", EntryPoint = "WCH55x_IspEnd", CallingConvention = CallingConvention.Winapi)]

@@ -10,7 +10,7 @@ using static System.Net.WebRequestMethods;
 
 namespace CHISP
 {
-    static class BinHelper
+    public static class BinHelper
     {
 
         public static byte Str2Byte(string c)
@@ -25,11 +25,10 @@ namespace CHISP
             if (hexLines.Length == 0)
                 throw new ISPException.InvalidFuncParamException("传入的Hex行数组是空的。");
             MemoryStream stream = new MemoryStream();
-            //LINE 数据格式：0x3A(1个字节) + 后续数据长度(2个字节) + 数据偏移址址(4个字节) + 数据类型(2个字节) + 数据内容(2个字节为单位) + 检验和(2个字节) + 0x0D + 0x0A
-            for (int i = 0; i < hexLines.Length; i++)
+             for (int i = 0; i < hexLines.Length; i++)
             {
                 string line = hexLines[i];
-                if (line.Length < 13) // 一行起码13字节，这都没有肯定是有问题的
+                if (line.Length < 9) // 一行起码9个字符，这都没有肯定是有问题的
                     throw new ISPException.InvalidFileContentException(string.Format("Hex文件第{0:D}行内容长度不足。", i));
                 if (line[0] != ':') //一行必然0x3A开头
                     throw new ISPException.InvalidFileContentException(string.Format("Hex文件第{0:D}行起始标记不存在。", i));
@@ -40,7 +39,7 @@ namespace CHISP
                 for (int ptr = 0; ptr < len + 4; ptr++)
                 {
                     // 读入每一行的数据
-                    lineBuf[ptr] = Str2Byte(line.Substring(3 + 2 * i, 2));
+                    lineBuf[ptr] = Str2Byte(line.Substring(3 + 2 * ptr, 2));
                     checksum += lineBuf[ptr];
                 }
                 if (checksum != 0)   // 校验和错
@@ -77,14 +76,10 @@ namespace CHISP
                             realAddr -= startAddr;
                             if (realAddr > 800 * 1024)
                                 throw new ISPException.InvalidFileContentException(string.Format("Hex文件第{0:D}行写入的地址超出800KB。", i));
-                            stream.Write(lineBuf.Skip(3).ToArray(), realAddr, len);
                         }
-                        stream.Write(lineBuf.Skip(3).ToArray(), realAddr, len);
-                        /*
-                        if (realAddr > 800 * 1024)
-                            throw new ISPException.InvalidFileContentException(string.Format("Hex文件第{0:D}行写入的地址超出800KB。", i));
-                        stream.Write(lineBuf.Skip(3).ToArray(), realAddr, len);
-                        */
+                        stream.Seek(realAddr, SeekOrigin.Begin);
+                        stream.Write(lineBuf.Skip(3).ToArray(), 0, len);
+                        stream.Flush();
                         break;
                     case 2: // 扩展段地址记录
                         segAddr = lineBuf[3] * 256 + lineBuf[4];
@@ -92,12 +87,10 @@ namespace CHISP
                     case 4: // 扩展线性地址记录
                         extAddr = lineBuf[3] * 256 + lineBuf[4];
                         break;
-                    case 5:  //开始线性地址记录
-                    case 3: //开始段地址记录
+                    case 5: // 开始线性地址记录
+                    case 3: // 开始段地址记录
                         break;
                     case 1:  // HEX文件结束标志
-                        if (startAddr >= 4)
-                            startAddr -= 4;
                         hexEnd = true;
                         break;
                     default:
@@ -119,7 +112,7 @@ namespace CHISP
             for (int i = 0; i < hexLines.Length; i++)
             {
                 string line = hexLines[i];
-                if (line.Length < 13) // 一行起码13字节，这都没有肯定是有问题的
+                if (line.Length < 9) // 一行起码9个字符，这都没有肯定是有问题的
                     throw new ISPException.InvalidFileContentException(string.Format("Hex文件第{0:D}行内容长度不足。", i));
                 if (line[0] != ':') //一行必然0x3A开头
                     throw new ISPException.InvalidFileContentException(string.Format("Hex文件第{0:D}行起始标记不存在。", i));
@@ -130,7 +123,7 @@ namespace CHISP
                 for (int ptr = 0; ptr < len + 4; ptr++)
                 {
                     // 读入每一行的数据
-                    lineBuf[ptr] = Str2Byte(line.Substring(3 + 2 * i, 2));
+                    lineBuf[ptr] = Str2Byte(line.Substring(3 + 2 * ptr, 2));
                     checksum += lineBuf[ptr];
                 }
                 if (checksum != 0)   // 校验和错
@@ -182,16 +175,14 @@ namespace CHISP
             if (hexLines.Length == 0)
                 throw new ISPException.InvalidFuncParamException("传入的Hex行数组是空的。");
 
-            int iapStartAddr = 0;
-            iapStartAddr = GetIapStartAddrFromHex(hexLines, isC51);
+            int iapStartAddr = GetIapStartAddrFromHex(hexLines, isC51);
             if (iapStartAddr != 0)
                 baseAddr = iapStartAddr;
             MemoryStream stream = new MemoryStream();
-            //LINE 数据格式：0x3A(1个字节) + 后续数据长度(2个字节) + 数据偏移址址(4个字节) + 数据类型(2个字节) + 数据内容(2个字节为单位) + 检验和(2个字节) + 0x0D + 0x0A
-            for (int i = 0; i < hexLines.Length; i++)
+             for (int i = 0; i < hexLines.Length; i++)
             {
                 string line = hexLines[i];
-                if (line.Length < 13) // 一行起码13字节，这都没有肯定是有问题的
+                if (line.Length < 9) // 一行起码9个字符，这都没有肯定是有问题的
                     throw new ISPException.InvalidFileContentException(string.Format("Hex文件第{0:D}行内容长度不足。", i));
                 if (line[0] != ':') //一行必然0x3A开头
                     throw new ISPException.InvalidFileContentException(string.Format("Hex文件第{0:D}行起始标记不存在。", i));
@@ -202,7 +193,7 @@ namespace CHISP
                 for (int ptr = 0; ptr < len + 4; ptr++)
                 {
                     // 读入每一行的数据
-                    lineBuf[ptr] = Str2Byte(line.Substring(3 + 2 * i, 2));
+                    lineBuf[ptr] = Str2Byte(line.Substring(3 + 2 * ptr, 2));
                     checksum += lineBuf[ptr];
                 }
                 if (checksum != 0)   // 校验和错
@@ -228,7 +219,8 @@ namespace CHISP
                                 throw new ISPException.InvalidFileContentException(string.Format("Hex文件第{0:D}行写入的地址错误。", i));
                             realAddr -= baseAddr;
                         }
-                        stream.Write(lineBuf.Skip(3).ToArray(), realAddr, len);
+                        stream.Seek(realAddr, SeekOrigin.Begin);
+                        stream.Write(lineBuf.Skip(3).ToArray(), 0, len);
                         break;
                     case 2: // 扩展段地址记录
                         segAddr = lineBuf[3] * 256 + lineBuf[4];
@@ -249,5 +241,10 @@ namespace CHISP
             }
             return stream.ToArray();
         }
+
+/*        public static byte[] MergeFiles()
+        {
+
+        }*/
     }
 }

@@ -38,7 +38,7 @@ namespace CHISP
         {
             public InvalidFileContentException() { }
             public InvalidFileContentException(string message)
-                : base(message) { throw new Exception(message); }
+                : base(message) { }
             public InvalidFileContentException(string message, Exception innerException)
                 : base(message, innerException) { }
         }
