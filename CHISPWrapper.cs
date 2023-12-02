@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Runtime.InteropServices;
-using System.Runtime.CompilerServices;
-using System.Security.Cryptography;
-using static CHISP.Wrapper.CHISPWrapper;
+﻿using System.Runtime.InteropServices;
 
 namespace CHISP
 {
@@ -264,7 +257,7 @@ namespace CHISP
             /// <param name="IAPFileDateType">IAP文件格式 0:HEX格式,1:BIN格式</param>
             /// <returns>成功返回非0，失败返回0</returns>
             [DllImport("WCHISPAPI.dll", EntryPoint = "WCH55x_FlashVerifyB", CallingConvention = CallingConvention.Winapi)]
-            public static extern Int32 FlashVerify(UInt32 iIndex, [In] Byte[] UserFileDataBuf, UInt32 UserFileDataLen, Byte UserFileDateType, [In] Byte[] IAPFileDataBuf, UInt32 IAPFileDataLen, Byte IAPFileDateType);
+            public static extern Int32 FlashVerify(UInt32 iIndex, [In] Byte[] UserFileDataBuf, UInt32 UserFileDataLen, Byte UserFileDateType, [In] Byte[]? IAPFileDataBuf, UInt32 IAPFileDataLen, Byte IAPFileDateType);
 
             /// <summary>
             /// 烧写固件和配置选项
@@ -278,7 +271,7 @@ namespace CHISP
             /// <param name="IAPFileDateType">IAP文件格式 0:HEX格式,1:BIN格式</param>
             /// <returns>成功返回非0，失败返回0</returns>
             [DllImport("WCHISPAPI.dll", EntryPoint = "WCH55x_FlashProgramB", CallingConvention = CallingConvention.Winapi)]
-            public static extern Int32 FlashProgram(UInt32 iIndex, [In] Byte[] UserFileDataBuf, UInt32 UserFileDataLen, Byte UserFileDateType, [In] Byte[] IAPFileDataBuf, UInt32 IAPFileDataLen, Byte IAPFileDateType);
+            public static extern Int32 FlashProgram(UInt32 iIndex, [In] Byte[] UserFileDataBuf, UInt32 UserFileDataLen, Byte UserFileDateType, [In] Byte[]? IAPFileDataBuf, UInt32 IAPFileDataLen, Byte IAPFileDateType);
 
             //OTP读函数
             [DllImport("WCHISPAPI.dll", EntryPoint = "WCH55x_ReadOTP", CallingConvention = CallingConvention.Winapi)]
